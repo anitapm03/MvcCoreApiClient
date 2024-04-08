@@ -13,10 +13,11 @@ namespace MvcCoreApiClient.Services
         //nuestra URL del servicio
         private string ApiUrl;
 
-        public ServiceHospital()
+        public ServiceHospital(IConfiguration configuration)
         {
             this.ApiUrl =
-                "https://apinetcorehospitalespaco.azurewebsites.net/";
+                configuration.GetValue<string>("ApiUrls:ApiHospitales");
+                //"https://apinetcorehospitalespaco.azurewebsites.net/";
             this.header = new MediaTypeWithQualityHeaderValue("application/json");
         }
 
@@ -57,6 +58,35 @@ namespace MvcCoreApiClient.Services
                 {
                     return null;
                 }
+            }
+        }
+
+        public async Task<Hospital>
+            FindHospitalAsync(int idHospital)
+        {
+            using (HttpClient client = new HttpClient())
+            {
+                string request = "api/hospitales/" + idHospital;
+                client.BaseAddress = new Uri(this.ApiUrl);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add
+                    (this.header);
+                HttpResponseMessage response = 
+                    await client.GetAsync(request);
+                if (response.IsSuccessStatusCode)
+                {
+                    //si las propiedades del json y del model
+                    //se llaman igual usamos directamente la 
+                    //serialización del response
+                    Hospital data =
+                        await response.Content.ReadAsAsync<Hospital>();
+                    return data;
+                }
+                else
+                {
+                    return null;
+                }
+
             }
         }
     }
